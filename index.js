@@ -44,30 +44,6 @@ app.post("/api/shorturl", function (req, res) {
     original_url: url,
     short_url: shortUrl,
   });
-
-  /* check if changing dns lookup to manual URL parsing makes the tests work
-  const urlObj = new URL(url);
-  dns.lookup(urlObj.host, (err) => {
-    if (err) return res.json({ error: "invalid url" });
-
-    console.log("This code is being touched");
-    let shortUrl;
-    if (Object.values(shortToFullUrlMap).includes(url)) {
-      shortUrl = Object.keys(shortToFullUrlMap).find(
-        (k) => shortToFullUrlMap[k] === url
-      );
-    } else {
-      shortUrl = shortUrlAddress.toString();
-      shortUrlAddress++;
-      shortToFullUrlMap[shortUrl] = url;
-    }
-
-    res.json({
-      original_url: url,
-      short_url: shortUrl,
-    });
-  });
-  */
 });
 
 app.get("/api/shorturl/:shorturl", function (req, res) {
