@@ -1,24 +1,51 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 const app = express();
+const bodyParser = require("body-parser");
 
-// Basic Configuration
-const port = process.env.PORT || 3000;
+const shortToFullUrlMap = {};
+let shortUrlAddress = 1;
 
-app.use(cors());
+app.use(cors({ optionsSuccessStatus: 200 }));
+app.use("/public", express.static(`${__dirname}/public`));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/public', express.static(`${process.cwd()}/public`));
-
-app.get('/', function(req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
+app.get("/", function (req, res) {
+  res.sendFile(`${__dirname}/views/index.html`);
 });
 
-// Your first API endpoint
-app.get('/api/hello', function(req, res) {
-  res.json({ greeting: 'hello API' });
+app.post("/api/shorturl", function (req, res) {
+  const url = req.body?.url;
+  let shortUrl;
+
+  if (!URL.canParse(url)) {
+    return res.status(400).json({ error: "invalid url" });
+  } else if (Object.values(shortToFullUrlMap).includes(url)) {
+    shortUrl = Object.keys(shortToFullUrlMap).find(
+      (k) => shortToFullUrlMap[k] === url
+    );
+  } else {
+    shortUrl = shortUrlAddress.toString();
+    shortUrlAddress++;
+    shortToFullUrlMap[shortUrl] = url;
+  }
+
+  res.json({
+    original_url: url,
+    short_url: shortUrl,
+  });
 });
 
-app.listen(port, function() {
-  console.log(`Listening on port ${port}`);
+app.get("/api/shorturl/:shorturl", function (req, res) {
+  const reqUrl = req.params.shorturl;
+  const longUrl = shortToFullUrlMap[reqUrl];
+
+  if (!longUrl) return res.status(404).json({ error: "url not found" });
+
+  res.redirect(longUrl);
+});
+
+var listener = app.listen(process.env.PORT || 3000, function () {
+  console.log(`Listening on port ${listener.address().port}`);
 });
